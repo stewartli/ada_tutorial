@@ -1,0 +1,261 @@
+---
+title: "Manipulating data"
+author: "Stewart Li"
+date: "9/14/2020"
+output: html_document
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(tidyverse)
+library(magrittr)
+```
+
+
+# Pipe
+
+
+```{r}
+df <- mtcars %>% 
+  as_tibble(rownames = "car") %>% 
+  mutate(across(c(am, gear, carb), as.factor)) 
+```
+
+
+```{r }
+df %T>% 
+  glimpse() %>% 
+  arrange(desc(mpg))
+
+df %$%
+  c(mpg, hp)
+```
+
+
+# Tidy
+
+
+1. row: each observation.  
+2. column: variables. 
+3. cell: value. 
+
+
+## Seprate
+
+
+```{r}
+df %>% 
+  separate(car, into = c('var1', "var2"), sep = " ", extra = "merge", remove = FALSE, fill = "right")
+
+df %>% 
+  separate_rows(car)
+```
+
+
+## Extract
+
+
+```{r}
+df %>% 
+  tidyr::extract(., car, into = c("var1"), regex = "(\\d\\d?\\d?[-]?\\d?)", remove = FALSE) %>% 
+  select(car, var1)
+```
+
+
+## Gather/Spread
+
+
+```{r}
+df %>% 
+  pivot_longer(c(mpg, disp, hp), 
+               names_to = "variables", 
+               values_to = "values") %>% 
+  pivot_wider(names_from = variables, 
+              values_from = values)
+```
+
+
+# Rows
+
+
+## Filter
+
+
+```{r}
+df %>% 
+  filter(am == 0, hp >= 150, hp <= 300) 
+
+df %>% 
+  group_by(hp > 200) %>% 
+  filter(mpg == max(mpg))
+
+df %>% 
+  filter(substr(car, 2, 2) == "a")
+```
+
+
+## Distinct
+
+
+```{r}
+df %>% 
+  distinct(am, gear, carb) %>% count(am, gear, carb)
+
+df %>% 
+  complete(am, gear, carb) %>% count(am, gear, carb)
+```
+
+
+## Slice
+
+
+```{r}
+df %>% 
+  arrange(desc(mpg)) %>% 
+  slice(1:3, (n()-2):n()) # slice_tail(n = 3)
+
+df %>% 
+  slice_max(order_by = mpg, n = 3)
+  
+df %>% 
+  slice_min(order_by = mpg, n = 3)
+
+df %>% 
+  slice_sample(prop = .2, replace = FALSE) # 6/32=0.2
+```
+
+
+# Columns
+
+
+## Select
+
+
+```{r}
+df %>% 
+  select(car, AM = am, gear, carb, mpg, hp, disp, everything()) %>% 
+  rename(GEAR = gear)
+
+df %>% 
+  select(matches("m|p"))
+  # select(!matches("m|p")) # same as below
+  # select(-matches("m|p"))
+```
+
+
+## Mutate
+
+
+```{r}
+df %>% 
+  mutate(k = rep(1:4, 8))
+
+df %>% 
+  mutate(hp1 = hp / 100, 
+         hp2 = paste0("HP ", hp1), 
+         hp3 = ifelse(hp > 250, "yes", "no"), 
+         hp4 = recode(hp3, "yes" = "y", "no" = "n"), 
+         hp5 = case_when(hp < 160 & am == 1 ~ "low", 
+                              hp < 250 & am == 0 ~ "medium", 
+                              hp > 250 ~ "high", 
+                              TRUE ~ "unknown")) %>% 
+  select(hp, hp1:last_col()) %>% 
+  count(hp5)
+```
+
+
+## Summarise
+
+
+```{r}
+df %>% 
+  summarise(across(where(is.numeric), mean))
+
+df %>% 
+  group_by(am, gear) %>% 
+  summarise(number = n(), 
+            across(c(mpg, hp), list(mean = mean, sd = sd)), 
+            range_hp = range(hp), 
+            range_between_hp = max(hp) - min(hp), 
+            first = first(hp), 
+            .groups = "drop")
+```
+
+
+# Strings
+
+
+[Test your regex here](https://regexr.com/)
+
+
+1. `^start, $end, .any, *0 more, ?optional, +,`
+1. `\escape, |or, (group), [one], {times},`
+
+
+```{r}
+df %>% 
+  .$car %>% 
+  nchar()
+  # str_length()
+```
+
+
+```{r}
+paste(1:6, "mpg", sep = '|', collapse = " ~ ") # a single string
+str_c(letters[1:6], 1:6, sep = "*")
+
+head(df) %>% 
+  mutate(text = str_glue("{am}-{gear}-{carb} has horse power of {new_var}", new_var = hp)) %>% 
+  .$text %>% 
+  str_wrap(20) %>% 
+  paste0("\n\n") %>% # paragraph***
+  cat()
+```
+
+
+```{r}
+df %>% 
+  mutate(new = substr(car, 1, 3))
+  # mutate(new = str_sub(car, 1, -3)) # from right
+```
+
+
+```{r}
+str_pad("you are so", side = "both", 20)
+str_trim("   you are    so   ")
+str_squish("   you are   so   ")
+```
+
+
+```{r}
+str_subset(c("you are so cool", "hello world"), "[h]") # which one contains h  
+str_which(c("you are so cool", "hello world"), "[h]")  
+```
+
+
+```{r}
+df %>% 
+  mutate(new = str_split_fixed(car, " ", n = 2)) # better
+  # mutate(new = str_split(car, "\\d.?", n = 2)) %>% unnest(new) # return a list
+
+df %>% 
+  mutate(new = str_extract(car, "(\\d\\d?\\d?[-]?\\d?)")) 
+
+df %>% 
+  filter(grepl("\\d", car))
+  # filter(str_detect(car, "\\d"))
+
+df %>% 
+  mutate(new = str_remove_all(car, "\\d"))
+  # mutate(new = str_replace_all(car, "\\d", "A"))
+```
+
+
+```{r}
+pagedown::chrome_print(here::here("tutorials/3_manipulation.html"), here::here("tutorials/3_manipulation.pdf"))
+```
+
+
+

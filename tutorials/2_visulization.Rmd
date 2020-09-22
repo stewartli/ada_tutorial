@@ -1,0 +1,196 @@
+---
+title: "Visualizing data"
+author: "Stewart Li"
+date: "9/14/2020"
+output: html_document
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+
+library(tidyverse)
+library(flair)
+```
+
+
+# Components
+
+
+```{r fig.cap="https://github.com/thomasp85/ggplot2_workshop/blob/master/presentation.pdf"}
+knitr::include_graphics(here::here("assets/ggplot_layers.png"))
+```
+
+
+## Data
+
+
+```{r df}
+df <- mtcars %>% 
+  mutate(across(c(am, gear, carb), as.factor))
+
+head(df)
+```
+
+
+## Mapping
+
+
+```{r init, include=FALSE}
+ggplot(data = df, aes(x = gear, y = mpg, color = am))
+```
+
+
+```{r}
+decorate("init") %>% 
+  flair("aes")
+```
+
+
+# Geometry ans Stats
+
+
+```{r geom, include=FALSE}
+df %>% 
+  ggplot(aes(gear, mpg, color = am)) +
+  geom_point() +
+  stat_summary(geom = "point", fun = "median", colour = "blue", size = 3) 
+```
+
+
+```{r}
+decorate("geom") %>% 
+  flair("geom")
+```
+
+
+# Scale
+
+
+```{r scale, include=FALSE}
+df %>% 
+  ggplot(aes(gear, mpg, color = am)) +
+  geom_point() +
+  stat_summary(geom = "point", fun = "median", colour = "red", size = 3) +
+  scale_color_viridis_d(name = "AM")
+```
+
+
+```{r}
+decorate("scale") %>% 
+  flair("scale_color_viridis_d")
+```
+
+
+```{r}
+df %>% 
+  ggplot(aes(mpg, hp, color = gear)) +
+  geom_point(aes(shape = "choice1"), size = 3) +
+  geom_point(aes(shape = "choice2")) +
+  scale_shape_manual(name = "I choose\neach of them", 
+                     values = c("choice1" = 3, "choice2" = 6)) +
+  scale_color_manual(name = "I choose\neach of them", 
+                     values = c("3" = "seagreen", "4" = "royalblue", "5" = "turquoise1"))
+```
+
+
+# Facet
+
+
+```{r facet, include=FALSE}
+df %>% 
+  ggplot(aes(mpg, hp, color = gear)) +
+  geom_point() +
+  scale_color_viridis_d(name = "Gear") +
+  facet_wrap(~am)
+```
+
+
+```{r}
+decorate("facet") %>% 
+  flair("facet_wrap")
+```
+
+
+# Coordinate
+
+
+```{r coord, include=FALSE}
+df %>% 
+  ggplot(aes(gear, mpg)) +
+  geom_col() +
+  coord_polar()
+```
+
+
+```{r}
+decorate("coord") %>% 
+  flair("coord_polar")
+```
+
+
+# Theme
+
+
+```{r theme, include=FALSE}
+df %>% 
+  ggplot(aes(mpg, hp, color = gear)) +
+  geom_point(size = 3, alpha = .6) +
+  geom_label(data = df %>% filter(hp >= 250), aes(label = hp), show.legend = FALSE) +
+  scale_color_viridis_d() +
+  scale_x_continuous(breaks = seq(0, 35, 5), 
+                     labels = scales::number_format(accuracy = 1., prefix = "m")) +
+  expand_limits(x = 0) + # xlim(0, range(df$mpg)[2]) 
+  labs(title = "My First Plot", 
+       subtitle = "About mtcars dataset", 
+       caption = "RAudit Solution LLP | Stewart Li", 
+       x = "MPG", 
+       y = "HP", 
+       color = "GEAR") +
+    theme_light() +
+    theme(axis.title.x = element_text(hjust = 1))
+```
+
+
+```{r}
+decorate("theme") %>% 
+  flair("theme")
+```
+
+
+# Practice
+
+
+```{r}
+df %>% 
+  ggplot(aes(mpg, hp)) +
+  geom_point(aes(color = hp > 250)) +
+  ggrepel::geom_label_repel(data = df %>% filter(hp > 250), 
+                            aes(label = hp),
+                            color = "white", 
+                            fill = "black", 
+                            segment.color = "black", # label distance
+                            size = 3, 
+                            hjust = -.5) +
+  scale_color_discrete(name = 'HP > 250?', label = c('Yes', 'No')) +
+  labs(title = "Highlight Those Points", 
+       x = "MPG", 
+       y = "HP") +
+  theme_light() +
+  theme(plot.title.position = "plot", 
+        legend.position = c(0.9, 0.9), 
+        legend.background = element_rect(color = 'grey90', fill = "grey90"), 
+        legend.key = element_rect(color = 'grey90', fill = "grey90"))
+```
+
+
+```{r}
+pagedown::chrome_print(here::here("tutorials/2_visulization.html"), here::here("tutorials/2_visulization.pdf"))
+```
+
+
+
+
+
+
+
