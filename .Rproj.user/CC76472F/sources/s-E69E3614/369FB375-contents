@@ -1,0 +1,206 @@
+---
+title: "full stack JS in R"
+author: "Stewart Li"
+date: "8/17/2020"
+output: html_document
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+
+library(tidyverse)
+```
+
+
+# Express
+
+
+[Express JS Crash Course 2019](https://www.youtube.com/watch?v=L72fhGm1tfE)
+[React & Express Starter Pack 2018](https://www.youtube.com/watch?v=v0t42xBIYIs)
+
+
+`res.send`;
+
+1. `res.send`: 
+2. `res.sendFile`: a single file.
+3. `res.json`:
+4. `res.render`: a template.
+5. `res.redirect`: `/`.
+6. Send from: postman, html form, 
+7. `nodejs + express` can serve static website.
+
+
+Handle templates;
+
+1. Pug.
+2. express-handlebars.
+3. EJS.
+
+
+Auth;
+
+1. MongoDB: user model with login or register.
+2. React: json web token (jwt).
+3. Handlebar: passport local (only for express).
+
+
+```{r}
+system2("npm", c("init -y"))
+
+system2("npm", c("i", "express", "concurrently"))
+system2("npm", c("i", "-D", "nodemon"))
+```
+
+
+Modify package.json; 
+
+
+1. package.json file is not allowed to modify by hand.(`npm rm`)
+2. `cd client && npm start` = `npm start --prefix client`
+
+
+"client-install": "cd client && npm install",
+"start": "node server.js",
+"server": "nodemon server.js",
+"client": "npm start --prefix client",
+"dev": "concurrently \"npm run server\" \"npm run client\""
+
+
+```{r}
+system2("touch", "server.js")
+```
+
+
+```{r}
+system2("npm", c("run", "server"))
+```
+
+
+# React
+
+
+[React JS Crash Course 2019](https://www.youtube.com/watch?v=sBws8MSXN7A)
+
+
+```{r}
+fs::dir_create("client")
+```
+
+
+Go to rstudio terminal. Refer to the file `st_npx_create_react_app.Rmd`.
+
+1. `cd client`
+2. `npm init`.
+3. `npm i react react-dom react-scripts`
+4. `mkdir public` -> `index.html`
+5. `mkdir src` -> `index.js` `app.js`
+6. `package.json` -> add `browserslist`
+7. `npm start`
+8. `Ctrl + C`
+
+
+# Tailwind
+
+
+[React & Tailwind CSS 2020](https://www.youtube.com/watch?v=FiGmAI5e91M)
+
+
+1. `npm i -D tailwindcss postcss-cli autoprefixer`
+2. `npx tailwind init tailwind.js --full`
+3. `touch postcss.config.js`
+4. `cd src && mkdir assets`
+5. `cd ..`
+6. `package.json` modify scripts
+
+
+Breaking changes;
+
+1. risk - There are upcoming breaking changes: removeDeprecatedGapUtilities
+2. risk - We highly recommend opting-in to these changes now to simplify upgrading Tailwind in the future.
+3. risk - https://tailwindcss.com/docs/upcoming-changes
+
+
+Browser is very slow due to tailwind.css.
+
+
+# React component
+
+
+1. `cd src && mkdir components`
+2. `cd components && touch customers.js`
+3. `app.js`: link components files to it .
+4. `cd ..`
+
+
+# concurrently
+
+1. Modify scripts: express -> package.json
+
+
+
+```{r}
+system2("npm", c("run", "dev"))
+```
+
+
+# Git
+
+
+Link to local project folder to github repo;
+
+1. `git init`
+2. `git add .`
+3. `git status`
+3. `git commit -m "initial commit"`
+4. `git remote add origin https://github.com/stewartli/reactjs.git`
+5. `git remote -v`
+6. `git push -u origin master`
+
+
+```{r}
+usethis::use_git() # git init
+usethis::use_readme_rmd() # create github readme (knitr)***
+
+usethis::use_build_ignore("inst/node/node_modules/") # in package
+usethis::use_git_ignore("node_modules", directory = ".")
+```
+
+
+```{r}
+system2("npm", c("-v"))
+processx::run(command = "npm", 
+              args = c("install"), 
+              wd = system.file("node", package = "st")) # used inside of my package***
+```
+
+
+```{bash}
+echo "const chalk = require('chalk');" >> whatever.js
+echo "console.log(chalk.blue('Hello world'));" >> whatever.js
+cat whatever.js # write a file
+
+cp /tmp/nodeexample/whatever.js  /tmp/nodeexample2/whatever.js # copy files
+
+mkdir -p inst/node # name path***
+```
+
+
+Other things I want to study;
+
+1. [V8](https://github.com/jeroen/V8)
+2. [websocket](https://github.com/rstudio/websocket)
+
+1. [chrome-remote-interface](https://github.com/cyrus-and/chrome-remote-interface)
+2. [puppeteer JS](https://github.com/puppeteer/puppeteer)
+3. [crrri](https://rlesur.github.io/crrri/)
+4. [puppeteer Py](https://github.com/miyakogi/pyppeteer)
+
+1. [Reactor](https://github.com/herbps10/reactor)
+2. [reactR](https://github.com/react-R/reactR)
+3. [vueR](https://github.com/vue-r/vueR)
+
+
+
+
+
