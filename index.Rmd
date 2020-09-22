@@ -6,7 +6,7 @@ output:
       - { icon: "fa-address-book", href: "https://raudit.netlify.app/", align: right }
     source_code: embed
     logo: "./assets/logo_original.png" 
-    favicon: "./assets/favicon.png"
+    favicon: "./assets/favicon.ico"
     theme: lumen
     orientation: columns
     vertical_layout: fill
@@ -180,7 +180,7 @@ Row {data-height=600}
 tb <- reactable(sharedf1,
                 bordered = FALSE,
                 highlight = TRUE, 
-                searchable = TRUE,
+                # searchable = TRUE,
                 filterable = FALSE,
                 selection = "multiple",
                 onClick = "select",
