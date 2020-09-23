@@ -1,0 +1,83 @@
+---
+title: "Audit Data Analytics (ADA)"
+output: learnr::tutorial
+runtime: shiny_prerendered
+description: "RAudit Solution LLP"
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE, error = FALSE)
+
+library(tidyverse)
+library(learnr)
+```
+
+
+## Data
+
+
+**Ways to view your data.**
+
+
+Write the R code required to glance at your data:
+
+
+```{r df, exercise=TRUE, exercise.lines = 5}
+
+```
+
+
+```{r df-hint}
+head(mtcars)
+```
+
+
+## Plot
+
+
+**Plot models over data.**
+
+
+Write the R code required to plot your data::
+
+
+```{r }
+mtcars %>% 
+  ggplot(aes(mpg, hp)) +
+  geom_point() +
+  geom_smooth(aes(color = 'red'), method = "gam", se = FALSE) +
+  geom_smooth(aes(color = 'blue'), method = "glm", formula = y ~ poly(x, 2), se = FALSE) +
+  scale_color_discrete(name = 'Models', 
+                       labels = c("GAM", "GLM"))
+```
+
+
+```{r mod, exercise=TRUE, exercise.lines = 5}
+mtcars %>% 
+  ggplot(aes(mpg, hp)) +
+  geom_point() +
+  geom_smooth()
+```
+
+
+```{r mod-hint}
+mtcars %>% 
+  ggplot(aes(mpg, hp)) +
+  geom_point() +
+  geom_smooth(aes(color = 'red'), method = "gam", se = FALSE) +
+  geom_smooth(aes(color = 'blue'), method = "glm", formula = y ~ poly(x, 2), se = FALSE) +
+  scale_color_discrete(name = 'Models', 
+                       labels = c("GAM", "GLM"))
+```
+
+
+
+
+
+
+
+
+
+
+
