@@ -1,0 +1,116 @@
+---
+title: "Functions"
+author: "Stewart Li"
+date: "9/16/2020"
+output: html_document
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(tidyverse)
+```
+
+
+# Vectorised 
+
+
+```{r}
+df <- mtcars %>% 
+  as_tibble(rownames = "car") %>% 
+  mutate(across(c(am, gear, carb), as.factor))
+```
+
+
+```{r}
+colMeans(mtcars)
+rowSums(mtcars) # diff from rowsum***
+cumsum(mtcars)
+cummax(mtcars) 
+pmin(mtcars$hp, 200) # compare to
+```
+
+
+```{r}
+apply(mtcars, 2, max)
+sapply(mtcars, mean)
+
+lapply(mtcars, quantile, probs = c(.25, .5, .75))
+lapply(df[, sapply(df, is.numeric)], summary)
+
+lapply(colnames(df), function(x) c(class(df[[x]]), x)) # lambda
+sapply(mtcars, function(x) x * 2)
+```
+
+
+# Functionals
+
+
+1. parameters, arguments, default, return. 
+2. variable scoping. 
+3. function factory.
+4. meta programming.
+5. "", NSE, ..., ~, ., 
+6. parallel processing.
+
+
+```{r}
+map_dbl(mtcars, ~ length(unique(.x)))
+reduce(mtcars$mpg, paste, sep = "|")
+```
+
+
+```{r}
+my_summarise <- function(df, grouping, col){
+  df %>% 
+    group_by({{grouping}}) %>% 
+    summarise("{{col}}_mean" := mean({{col}}))
+}
+
+mtcars %>% 
+  my_summarise(am, mpg)
+```
+
+
+```{r}
+myplot <- function(df, customer, xvar, yvar){
+  x_label = rlang::as_label(quo({{xvar}})) # {{get var}}, quotation, as_label are strings.
+  y_label = rlang::as_label(quo({{yvar}})) 
+  df %>% 
+    filter(gear == customer) %>% 
+    ggplot(aes({{xvar}}, {{yvar}})) +
+    geom_point() +
+    labs(title = paste0(x_label, " vs ", y_label, " in ", customer)) + 
+    theme_light()
+}
+
+myplot(mtcars, 5, mpg, disp)
+
+debugonce(myplot)
+```
+
+
+```{r}
+knitr::knit_exit()
+```
+
+
+```{r}
+pagedown::chrome_print(here::here("tutorials/5_function.html"), format = "pdf")
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,154 @@
+---
+title: "Modelling"
+author: "Stewart Li"
+date: "9/16/2020"
+output: html_document
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(tidyverse)
+```
+
+
+# Correlation
+
+
+```{r}
+df <- mtcars %>% 
+  as_tibble(rownames = "car") %>% 
+  mutate(across(c(am, gear, carb), as.factor))
+```
+
+
+```{r}
+library(corrplot)
+
+corrplot(df %>% select(where(is.numeric)) %>% cor(), 
+         addCoef.col = "white", 
+         addCoefasPercent = TRUE, 
+         type = "upper", 
+         order = "AOE")
+```
+
+
+# Plot
+
+
+```{r}
+df %>% 
+  ggplot(aes(mpg, hp)) +
+  geom_point() +
+  geom_smooth(aes(color = 'red'), method = "gam", se = FALSE) +
+  geom_smooth(aes(color = 'blue'), method = "glm", formula = y ~ poly(x, 2), se = FALSE) +
+  scale_color_discrete(name = 'Models', 
+                       labels = c("GAM", "GLM"))
+```
+
+
+# Models
+
+
+```{r}
+lm(mpg ~ hp, data = df) %>% 
+  # str() # list
+  names()
+```
+
+
+```{r}
+df %>% 
+  group_by(am, gear) %>% 
+  nest(data = -c(am, gear)) %>% 
+  mutate(mod = map(data, ~lm(mpg ~ hp + disp, data = .x)), 
+         mod_tidy = map(mod, broom::tidy)) %>% 
+  unnest(mod_tidy)
+```
+
+
+# Model effect
+
+
+```{r}
+lm1 <- lm(mpg ~ hp + disp + am, data = df)
+lm2 <- lm(mpg ~ hp + disp + am + gear, data = df)
+lm3 <- lm(mpg ~ hp + disp + am + gear + carb, data = df)
+
+# pander::pander(summary(lm1))
+# library(stargazer)
+```
+
+
+```{r}
+library(ggeffects)
+
+lm1_est <- ggpredict(lm1, terms = c("hp", 'am')) # disp hold its mean constant
+lm1_est1 <- ggpredict(lm1, terms = c("hp[150, 250]", 'am')) 
+lm1_est2 <- ggpredict(lm1, terms = c("hp[meansd]", 'disp[minmax]')) 
+
+mean(mtcars$disp)
+mean(mtcars$hp)
+
+plot(lm1_est)
+plot(lm1_est, facets = TRUE)
+```
+
+
+# Model report
+
+
+```{r}
+library(gt)
+
+df %>% 
+  group_by(gear, carb) %>% 
+  summarise(across(c(mpg, hp, disp), mean)) %>% 
+  gt(rowname_col = 'carb') %>% 
+  tab_header(title = "My report table", 
+             subtitle = "Grouped by gear and carb") %>% 
+  tab_spanner(label = "Measurement", 
+              columns = vars(hp, disp)) %>% 
+  cols_label(hp = 'HP', 
+             disp = 'DISP') %>% 
+  fmt_number(vars(mpg, hp,disp), 
+             decimals = 0) %>% 
+  cols_align(align = 'right', 
+             columns = vars(mpg, hp, disp)) %>% 
+  row_group_order(groups = c('5', '4', '3'))
+```
+
+
+```{r}
+library(modelsummary)
+
+mod_list <- list("Model 1" = lm1, "Model 2" = lm2, "Model 3" = lm3)
+# msummary(lm1)
+msummary(mod_list, output = "html") # latex
+
+msummary(mod_list, stars = TRUE) %>% 
+  kableExtra::row_spec(c(2, 4, 6), background = 'coral')
+```
+
+
+```{r}
+library(gtsummary)
+
+df %>% 
+  select(-car) %>% 
+  tbl_summary(by = am) %>% 
+  as_gt() %>% 
+  tab_header(title = "My table summary")
+```
+
+
+```{r}
+pagedown::chrome_print(here::here("tutorials/6_model.html"), format = "pdf")
+```
+
+
+
+
+
+

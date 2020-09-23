@@ -1,0 +1,179 @@
+---
+title: "Cleaning data"
+author: "Stewart Li"
+date: "9/15/2020"
+output: html_document
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, out.width = "100%")
+
+library(tidyverse)
+library(kableExtra)
+```
+
+
+# Import
+
+
+```{r}
+billboard_raw <- read_csv("https://raw.githubusercontent.com/hadley/tidy-data/master/data/billboard.csv") 
+```
+
+
+# Clean
+
+
+```{r}
+df <- billboard_raw %>% 
+  pivot_longer(starts_with('x'), 
+               names_to = 'week', 
+               names_pattern = '^x(\\d\\d?)[a-z]{2}\\.week', # parse_number()
+               # names_transform = list(week = as.integer), # version https://github.com/tidyverse/tidyr/issues/980
+               values_to = 'rank', 
+               values_drop_na = TRUE) %>% 
+  mutate(week = readr::parse_number(week)) %>% 
+  separate(time, 
+           into = c('minutes', 'seconds', 'other'), 
+           sep = ':', 
+           convert = TRUE, 
+           remove = TRUE) %>% # use two cols
+  mutate(len = minutes + seconds / 60, 
+         date = date.entered + (week - 1)*7) %>% 
+  select(-minutes, -seconds, -other) %>% 
+  rename(artist = artist.inverted)
+
+write_csv(df, here::here('data', "billboard_clean.csv"))
+```
+
+
+# Mung
+
+
+```{r}  
+df <- read_csv(here::here('data/billboard_clean.csv'))
+
+head(df)
+
+best <- df %>% 
+  group_by(artist, track) %>% 
+  summarise(best_score = min(rank), 
+            best_last = sum(rank == 1)) %>% 
+  mutate(peak = ifelse(best_score == 1, 'best hit', 'no hit')) %>% 
+  ungroup()
+```
+
+
+# Table
+
+
+```{r}
+best %>% 
+  filter(fct_lump(artist, 5, w = best_last) != 'Other') %>% 
+  kable() %>% 
+  kable_styling(full_width = F) %>% 
+  column_spec(1, bold = TRUE) %>% 
+  collapse_rows(columns = c(1), valign = "top") 
+```
+
+
+# Plot
+
+
+```{r}
+df %>% 
+  ggplot(aes(date, rank)) +
+  geom_line(aes(group = track), alpha = 0.6) +
+  geom_vline(xintercept = as.numeric(as.Date("2000-01-01", "%Y-%m-%d")), color = 'red', size = 1.5, lty = 2) +
+  geom_vline(xintercept = as.numeric(as.Date("2000-12-31", "%Y-%m-%d")), color = 'red', size = 1.5, lty = 2) +
+  scale_x_date(date_breaks = "1 month", date_labels = "%b") +
+  scale_y_reverse() +
+  labs(title = "The Trend Over The Period", 
+       x = "", 
+       y = "Rank") +
+  theme_light()
+```
+
+
+```{r}
+df %>% 
+  left_join(best, by = c('artist', 'track')) %>% 
+  ggplot(aes(week, rank, group = track, color = peak)) +
+  geom_line(aes(size = peak), alpha = 0.6) +
+  scale_y_reverse() +
+  scale_color_manual(name = "Peak",
+                     label = c('Best Hit', 'No Hit'), 
+                     values = c('red', 'grey30')) +
+  scale_size_manual(name = "Peak",
+                    label = c('Best Hit', 'No Hit'), 
+                    values = c(1, .25)) +
+  labs(title = "The Trend Over The Period", 
+       x = "Week", 
+       y = "Rank") +
+  theme_light()
+```
+
+
+```{r }
+df %>% 
+  count(artist, sort = TRUE) %>% 
+  slice(1:5, (n()-5):n()) %>% 
+  mutate(artist = fct_reorder(artist, n)) %>% 
+  ggplot(aes(n, artist)) +
+  geom_col(width = 0.6) +
+  geom_text(aes(label = n), nudge_x = 2, color = '#F11B59', alpha = .6, size = 3) +
+  scale_x_continuous(limits = c(0, 110), expand = c(0, 0)) +
+  scale_y_discrete(expand = c(0, 0)) +
+  labs(title = paste0("<b><span style = 'font-size:20pt'>Artists Frequently",
+                      "<span style = 'color:#F11B59;'> ",
+                      "**Appear On Billboard**",
+                      "</span></span></b>",
+                      "<br><b><span style = 'font-size:14pt'>",
+                      "*Top 5 and Bottom 5 Artists*",
+                      "</span></b><br>"), 
+       caption = "RAuidt Solution LLP | Stewart Li", 
+       x = "", 
+       y = "") +
+  ggtext::geom_richtext(data = . %>%
+                          summarise(the_mean = round(mean(n)), 0),
+                        aes(x = the_mean,
+                            y = "Ghostface Killah", 
+                            label = glue::glue("*mean of frequency* = {the_mean}")), 
+                        fill = NA, 
+                        label.color = NA,
+                        size = 2, 
+                        angle = -90) +
+  theme_minimal() +
+  theme(
+    plot.margin = margin(35, 35, 10, 35), 
+    plot.title = ggtext::element_textbox_simple(
+      size = 13,
+      face = NULL,
+      lineheight = 1.75,
+      padding = margin(5, 5, 0, 5),
+      margin = margin(0, 0, 0, 0),
+      fill = "white"), 
+    plot.title.position = "plot", 
+    plot.caption = ggtext::element_textbox_simple(
+      size = 10,
+      lineheight = 1,
+      padding = margin(10, 10, 10, 10),
+      margin = margin(10, 0, 10, 0),
+      fill = "#F5F5F5",
+      halign = 0.5,
+      valign = 0.5)
+  )
+```
+
+
+```{r}
+pagedown::chrome_print(here::here("tutorials/4_cleaning.html"), here::here("tutorials/4_cleaning.pdf"))
+```
+
+
+
+
+
+
+

@@ -107,7 +107,7 @@ In our view, **R** is a perfect tool to increases their productivity and conform
 
 **Our services** include Financial Planning & Analysis, Internal Audit, Forensic Accounting, External Audit, Training. 
 
-**Our training course** include [Introduction](), [Programming](), [Cleaning](), [Manipulaiton](), [Visualization](), [Modling](), and [Report](). 
+**Our training course** include [Introduction](https://github.com/stewartli/ada_tutorial/blob/master/tutorials/0_introduction.pdf), [Programming](https://github.com/stewartli/ada_tutorial/blob/master/tutorials/1_programming_r.Rmd), [Cleaning](https://github.com/stewartli/ada_tutorial/blob/master/tutorials/4_cleaning.Rmd), [Manipulaiton](https://github.com/stewartli/ada_tutorial/blob/master/tutorials/3_manipulation.Rmd), [Visualization](https://github.com/stewartli/ada_tutorial/blob/master/tutorials/2_visulization.Rmd), [Functions](https://github.com/stewartli/ada_tutorial/blob/master/tutorials/5_function.Rmd), [Modling](https://github.com/stewartli/ada_tutorial/blob/master/tutorials/6_model.Rmd), and [Report](https://github.com/stewartli/ada_tutorial/blob/master/tutorials/7_report.pdf). 
 
 
 See an interactive example on [Page 2]. <br>

@@ -7,7 +7,7 @@ output:
   xaringan::moon_reader:
     css: ["../assets/mtheme_maxa.css", "../assets/fonts_mtheme_max.css", "metropolis-fonts"]
     df_print: kable
-    self_contained: true
+    self_contained: false
     nature:
       ratio: 16:9
       highlightStyle: github

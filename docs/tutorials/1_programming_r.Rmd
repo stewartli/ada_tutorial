@@ -1,0 +1,437 @@
+---
+title: "Basic programming"
+author: "Stewart Li"
+date: "8/29/2020"
+output: html_document
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(tidyverse)
+```
+
+
+# Document structure
+
+
+1. R || Python || Javascript
+2. Base R || Pandas
+3. tidyverse and data.table
+
+
+# Variables
+
+
+Variable types: character, numeric, integer, double, logical, date, factor, complex, raw, NULL.
+
+
+```{r}
+class(c("strings"))
+typeof(c(1L))
+typeof(c(1))
+typeof(c(TRUE))
+class(as.Date(Sys.time()))
+class(factor(c("hello", "hi", "bye", "bye")))
+typeof(c(1i))
+class(c(charToRaw("strings")))
+```
+
+
+`is` and `as`. 
+
+
+```{r}
+is.double(c(2))
+is.nan(c(-2, 0, 2) / 0)
+is.vector(numeric(10))
+
+class(toString(c(2)))
+class(as.numeric(c("2")))
+```
+
+
+Objects assignment: `=`, `<-`, `->`, `<<-`, 
+
+
+```{r}
+my.name <- readline(prompt="Enter name: ") # input in python
+print(paste("Hi,", my.name))
+```
+
+
+# Data structure
+
+
+Vector: same data type, recycled, vectorised.
+Index and names: `$, [], [[]], .[]`. 
+
+
+```{r}
+c(11, "you", TRUE ) # without losing information
+c(11, TRUE )
+
+c(c(1:3), c(1:10))
+c(2, 4, 6)^2
+
+intersect(c(3:4), c(1:10))
+union(c(11, 12), c(1:10))
+
+numeric(10) # create a vector
+character(10)
+```
+
+
+```{r}
+?`[` # i, j, k
+
+a <- c(you = 3, me = 4)
+names(a)
+tracemem(a) # id
+
+a['you'] # like counter in python
+a['them'] # NA
+a[1:2] # slice 
+```
+
+
+Matrices: same data type.
+Array: multiple dimensions.
+
+
+```{r}
+matrix(letters, 13, 2, byrow = TRUE) 
+
+solve(matrix(1:26, 2, 2)) # inverse
+matrix(1:26, 2, 2) %*% solve(matrix(1:26, 2, 2))
+diag(2)
+
+t(head(mtcars))
+```
+
+
+List: anything.
+Dataframe: same length, rows and columns.
+
+
+```{r}
+help("data.frame")
+
+data.frame(id = 1:6,
+           greet = sample(LETTERS, 6),
+           nums = runif(6, 0, 100)) 
+```
+
+
+```{r}
+lista <- list(a = 1:10, 
+              b = c("you", "and", "me"), 
+              c = c(TRUE, FALSE), 
+              d = head(mtcars)) # like dict in python
+
+lista[1] # extract
+lista["a"]
+lista[[1]]
+lista$a
+
+lista$e <- c(20:26) # create 
+append(lista, c(20:26)) # add 
+
+lista[5] <- NULL # remove 
+lista[["a"]] <- c(13:19) # modify
+```
+
+
+# Operators
+
+
+Arithmetic calculator: `+, -, *, /, ^, %/%, %%`.
+Others: `;`, `#`, 
+
+
+```{r}
+3 + 6
+`+` (3 + 6)
+
+49 %/% 2
+```
+
+
+# Conditions
+
+
+Logical operators: `==, !=, >, >=, |, &, !, %in%, -, xor`, 
+Control flow: `if`, `switch`, 
+
+
+```{r}
+"you" == "you" 
+"you" != "me"
+```
+
+
+```{r}
+if(49 > 49)
+  {print('More')
+}else if(49 > 50 | 0 >= -1){
+    print("Less")
+}else{
+    print("None")
+  }  
+```
+
+
+```{r}
+for (i in 1:10) {
+  if(i %% 2 == 0){
+    print(paste0("The number ", i, " is divisible by 2."))
+  }else if(i %% 3 == 0){
+    print(paste0("The number ", i, " is divisible by 3."))
+  }else{
+    print(paste0("The number ", i, " is not divisible by 2 or 3."))
+  }
+}
+```
+
+
+# Loop
+
+
+```{r}
+for (i in 1:10) {
+  print(i^2) # reset i each time
+}
+
+for (i in letters) {
+  print(i)
+}
+
+for (i in seq_along(1:10)){
+  print(paste0("this is ", i)) # index vs items), length(), seq_along()
+} 
+
+ls() # last object
+```
+
+
+Iterate over index or item.  
+
+
+```{r}
+a <- c(2, 5, "you")
+
+for (x in a){ 
+  if(x == "5"){
+    print("you are so cool")
+  }
+} 
+
+for (x in 1:length(a)){  
+  if(a[x] == "5"){
+    print("you are so cool")
+  }
+}
+```
+
+
+```{r}
+i <- 1:6
+for (i in i) {
+  if (i == 3){
+    next
+  }
+  print(i)
+}
+
+i <- 1
+while (i < 6) {
+  if (i == 3){
+    break
+  }
+  print(i)
+  i = i+1
+}
+```
+
+
+Pre-allocation of object. 
+
+
+```{r}
+a <- vector(mode = 'list', length = 10)
+
+for (i in 1:10) {
+  a[i] <- i^2
+}
+
+unlist(a)
+```
+
+
+```{r}
+a <- (1:10)
+for (x in a){
+  print(x^x)
+}
+
+c(1:10) %>% map_dbl(~.x^.x)
+```
+
+
+# Functions
+
+
+```{r}
+myfun <- function(x, y = 10){
+  a <- x + y
+  a <- paste0('result is a number of ', a)
+  a
+} 
+
+myfun(20)
+```
+
+
+```{r}
+myfun1 <- function(func, ...){
+  func(mtcars$mpg)
+} # input function
+
+myfun1(mean)
+myfun1(sum)
+```
+
+
+```{r}
+myfun2 <- function(x){
+  addmy <- function(){
+    paste0("start ", mean(c(x, 10)), " end")
+  }
+  return(addmy)
+} # output function
+
+myfun2(90)()
+```
+
+
+# Erorr handling
+
+
+```{r}
+myupdate <- function(x){
+    tryCatch(
+      {
+        y = x * 2
+        return(y)
+      },
+      error = function(error_message) {
+        message("This is my custom message.")
+        cli::cli_alert_danger("what are you doing?") 
+        message("And below is the error message from R:")
+        return(message(error_message)) # catch errors***
+      }
+    )
+}
+
+myupdate("a")
+```
+
+
+# OOP
+
+
+```{r}
+Audit <- R6::R6Class(
+  classname = "Audit",
+  public = list(
+    initialize = function(client, aic) {
+      private$client <- client
+      private$aic <- aic
+      # if (!missing(client)) self$client <- client
+      # if (!missing(aic)) self$aic <- aic
+      self$greet()
+    },
+    set_aic = function(val) {
+      private$aic <- val
+    },
+    greet = function() {
+      cat(paste0(private$client, " is charge of the audit of ", private$aic, ".\n"))
+    }
+  ), 
+  private = list(
+    client = NA,
+    aic = NA
+  )
+)
+
+nh2020 <- Audit$new("RAudit Solution LLP", "Stewart Li")
+
+nh2020$set_aic("Song Peng")
+nh2020$greet()
+```
+
+
+# Data sciense
+
+
+1. File type: `.R`, `.Rmd`, `Rdata`, 
+2. Import library: `dplyr::select`, `:::`, 
+
+
+```{r}
+getwd()
+dir(".") 
+list.files() 
+```
+
+
+```{r}
+?mtcars
+
+attributes(mtcars)
+dim(mtcars)
+str(mtcars)
+head(mtcars);tail(mtcars)
+
+Map(min, mtcars)
+apply(mtcars, 2, min)
+Reduce(`+`, mtcars)
+
+with(mtcars, by(am, gear, summary))
+with(mtcars, aggregate(mpg, by = list(am, gear), FUN = function(x) c(mean(x), sd(x))))
+
+mean(mtcars$mpg)
+mean(mtcars[mtcars$hp > mean(mtcars$hp), "mpg"])
+
+transform(mtcars, e = hp*.01)
+merge(mtcars, data.frame(am = c("yes", "no")), by = "am", all = TRUE) # row bind
+```
+
+
+```{r}
+plot(mtcars) # pairs()
+hist(mtcars$mpg)
+
+plot(mpg ~ hp, 
+     data = mtcars, 
+     main = 'Scattor plot', 
+     xlab = 'MPG', 
+     ylab = 'HP', 
+     cex.main = 1.5, 
+     cex.lab = 1.5, 
+     col = 'red', 
+     pch = 16)
+abline(h = mean(mtcars$mpg), col = 'red')
+abline(v = mean(mtcars$hp), col = 'blue')
+```
+
+
+```{r}
+pagedown::chrome_print(here::here("tutorials/1_programming_r.html"), here::here("tutorials/1_programming_r.pdf"))
+```
+
+
+
+
+
