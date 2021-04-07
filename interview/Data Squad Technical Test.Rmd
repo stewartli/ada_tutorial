@@ -1,0 +1,173 @@
+---
+title: "Data Squad Technical Test"
+author: "Stewart Li"
+date: "4/7/2021"
+output: html_document
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE, error = FALSE, comment = '>')
+
+library(tidyverse)
+library(lubridate)
+library(openxlsx)
+```
+
+
+*Source:* [*Data Squad Technical Test*](https://github.com/cdg-data-coe/interviews2)
+
+
+## Context
+
+Under each transport commercial contract, there may be multiple, dynamic bookings per month. There is opportunity to automate and optimise transportation planning i.e. match vehicles to schedule.     
+
+The goal is to allocate the minimum number of vehicles, (and cost - larger cacpacity bus cost more) to each commercial contract for that 1 month.     
+
+Each trip journey, and each bus total journey **cannot exceed 45mins**. There are 10, 19 and 40-seater buses that can be utilised.    
+
+
+### Task
+
+1. Perform a EDA on the excel sheet named- 'input' using MS Power BI.    
+2. Then, write a Python program to generate the 'output_plan' excel sheet.    
+3. Ensure the code / model can run on other scenario inputs with same data attributes.    
+4. State your assumptions clearly.    
+
+
+### Important Instructions
+
+1. Implement the task, comment your codes and commit into github.    
+2. Write clear steps for evaluators to setup and run your codes.    
+3. Include comments on how your solution solves the problem and possible enhancement if given more time and data (what kind of data).    
+
+
+## My solution
+
+
+Assumptions;    
+
+1. I am unable to find information about the column of `10, 19 and 40-seater buses`. Therefore, I can not do calculation (or model) on it.     
+2. Columns of `pickup_time` and `dropoff_time` contain missing values. I remove them in order to calculate travel time.     
+3. The columns of `bookiing_id` is unique (no duplication), which seems different from the question statement (The goal is to allocate the minimum number of vehicles to each commercial contract for that 1 month). It would be helpful if there are more details in this regards.  
+
+
+Notes;    
+
+1. I use `R` to perform EDA instead of `MS Power BI`.   
+2. It is very easy to write out excel sheet in `R`. Thus, it is not necessary for me to jump into `Python` to do it.  
+3. My result is the `stewartli` (sheetname) of excel workbook. HTML version of this document is attached for your review.   
+4. I have refactored my code to ensure it runs for other similar data.   
+
+
+### Import data
+
+
+```{r}
+# step1: read in data
+df <- readxl::read_excel('./Bus-trips-data-sample.xlsx')
+
+# view data structure (like Python Pandas describe function)
+glimpse(df)
+```
+
+
+### Clean data
+
+
+```{r}
+# step2: data cleaning
+df_clean <- df %>% 
+  # clean column names
+  janitor::clean_names() %>% 
+  # convert to date
+  mutate(pickup = paste(journey_date, pickup_time, sep = " "), 
+         dropoff = paste(journey_date, dropoff_time, sep = " "), 
+         journey = dmy(journey_date)) %>%
+  # convert missing values to NA
+  mutate(pickup_time = ifelse(pickup_time == "--:--", NA, pickup_time), 
+         dropoff_time = ifelse(dropoff_time == "--:--", NA, dropoff_time)) %>% 
+  # select relevant columns
+  select(booking_id, journey, pickup, dropoff, everything()) 
+
+# view first 6 rows of dataset
+head(df_clean)
+```
+
+
+### EDA
+
+
+```{r}
+# step3: overview of the dataset
+skimr::skim(df_clean)
+
+# visual overview of the dataset 
+visdat::vis_dat(df_clean)
+```
+
+
+```{r}
+# step4: calculate cancel rate of weekdays
+df_clean %>% 
+  # create a weekday column
+  mutate(weekday = wday(journey, label = TRUE)) %>%
+  # calculate number of booking_id based on weekday and booking_status
+  group_by(weekday, booking_status) %>% 
+  summarise(n = n(), .groups = "drop") %>% 
+  # reshape the dataset
+  pivot_wider(names_from = booking_status, values_from = n, values_fill = 0) %>% 
+  # calculate cancel rate of weekdays
+  mutate(pct_cancel = Cancelled / (Cancelled + Confirmed + New)) 
+```
+
+
+### Write excel
+
+
+```{r}
+# step5: prepare the required data structure
+travel <- df_clean %>% 
+  # filter out NA
+  dplyr::filter(!is.na(pickup_time), !is.na(dropoff_time)) %>% 
+  # calculate the travel time
+  mutate(pickup1 = str_remove(pickup, " AM"), 
+         pickup1 = parse_datetime(pickup1, "%d %b %Y %H:%M"), 
+         dropoff1 = str_remove(dropoff, " AM"), 
+         dropoff1 = parse_datetime(dropoff1, "%d %b %Y %H:%M"), 
+         travel = dropoff1 - pickup1) %>% 
+  # filter out travel time exceeding 45 mins
+  dplyr::filter(travel < 45) %>% 
+  # select relevant columns
+  select(journey, travel, booking_id) %>% 
+  # paste booking_id based on journey_date and travel time
+  group_by(journey, travel) %>% 
+  summarise(booking_ids = paste(booking_id, collapse = ', '), .groups = "drop") %>% 
+  # create this column
+  mutate(type_of_bus_10_19_40_seaters = 10) %>% 
+  # get the required data shape
+  select(journey, type_of_bus_10_19_40_seaters, travel, booking_ids)
+
+# view first 6 rows of dataset
+head(travel)
+```
+
+
+```{r eval=FALSE}
+# step6: write out excel
+wb <- loadWorkbook("Bus-trips-data-sample.xlsx")
+addWorksheet(wb, "stewartli")
+writeData(wb, "stewartli", travel, startRow = 1, startCol = 1)
+saveWorkbook(wb, file = "Bus-trips-data-sample1.xlsx")
+```
+
+
+```{r}
+knitr::knit_exit()
+```
+
+
+
+
+
+
